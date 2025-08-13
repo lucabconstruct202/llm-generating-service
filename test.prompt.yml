@@ -49,6 +49,61 @@ messages:
     content: >-
       Erstelle das Protokoll AUSSCHLIESSLICH auf Basis des folgenden
       Transkripts.\n\nTRANSKRIPT:\n{{transcript}}\n
+  - role: assistant
+    content: >-
+      "{\n  \"general\": {\n    \"date\": \"2025-01-15\",\n    \"topic\":
+      \"Interne Sitzung zur Personalplanung und Finanzplanung\",\n   
+      \"participants\": [\n      { \"name\": \"Judith Gross\", \"department\":
+      \"HR\" },\n      { \"name\": \"Moritz Späh\", \"department\":
+      \"Finanzabteilung\" },\n      { \"name\": \"Bettina Blöchlinger\",
+      \"department\": \"Marketing\" },\n      { \"name\": \"Max Mustermann\",
+      \"department\": \"Verwaltung\" }\n    ]\n  },\n  \"sections\": [\n   
+      {\n      \"title\": \"Personalplanung – Neueinstellungen und
+      Ressourcen\",\n      \"decisions\": [\n        {\n          \"decision\":
+      \"Zwei neue Marketingmitarbeiter zum 2025-02-01 werden eingestellt;
+      Stellenausschreibungen bis 2025-01-20 veröffentlichen.\",\n         
+      \"responsibilities\": [ { \"person\": \"Judith Gross\", \"department\":
+      \"HR\" } ],\n          \"actions\": [\n           
+      \"Stellenausschreibungen erstellen und publizieren\",\n           
+      \"Bewerbungen bis 2025-01-25 sichten\"\n          ],\n         
+      \"due_date\": \"2025-01-25\"\n        }\n      ]\n    },\n    {\n     
+      \"title\": \"Finanzplanung – Budget für Q1 2025\",\n      \"decisions\":
+      [\n        {\n          \"decision\": \"Marketingbudget für Q1 2025 um 10%
+      erhöhen.\",\n          \"responsibilities\": [ { \"person\": \"Moritz
+      Späh\", \"department\": \"Finanzabteilung\" } ],\n          \"actions\":
+      [\n            \"Budgetanpassungen vornehmen\",\n           
+      \"Detaillierte Übersicht bis 2025-01-20 bereitstellen\"\n         
+      ],\n          \"due_date\": \"2025-01-20\"\n        }\n      ]\n   
+      },\n    {\n      \"title\": \"Marketingstrategie – Werbemaßnahmen für
+      Produktlaunch\",\n      \"decisions\": [\n        {\n         
+      \"decision\": \"Werbekampagne für Produktlaunch im Februar 2025 genehmigt
+      (Online & Social Media).\",\n          \"responsibilities\": [ {
+      \"person\": \"Bettina Blöchlinger\", \"department\": \"Marketing\" }
+      ],\n          \"actions\": [\n            \"Zeitplan für die Umsetzung
+      erstellen\",\n            \"Koordination der Kampagne\"\n         
+      ],\n          \"due_date\": null\n        }\n      ]\n    },\n    {\n     
+      \"title\": \"Büroorganisation – Umstrukturierung der Büroräume\",\n     
+      \"decisions\": [\n        {\n          \"decision\": \"Büroräume für
+      Marketing-Team werden neu strukturiert; neues Bürokonzept zu
+      erstellen.\",\n          \"responsibilities\": [ { \"person\": \"Max
+      Mustermann\", \"department\": \"Verwaltung\" } ],\n          \"actions\":
+      [ \"Bürokonzept ausarbeiten und vorlegen\" ],\n          \"due_date\":
+      \"2025-01-25\"\n        }\n      ]\n    }\n  ],\n  \"open_items\": [\n   
+      {\n      \"question\": \"Budgetmittel für neue Marketingstellen – muss
+      Budget angepasst werden?\",\n      \"context\": \"Prüfung der
+      Budgetanpassung für zwei neue Mitarbeiter; Klärung mit Finanzabteilung bis
+      nächste Sitzung.\",\n      \"responsible\": \"Finanzabteilung\",\n     
+      \"due_date\": null\n    },\n    {\n      \"question\": \"Organisation der
+      gemeinsamen Arbeitsbereiche in der neuen Bürostruktur\",\n     
+      \"context\": \"Verwaltung erarbeitet Vorschläge für die Organisation der
+      neuen Bereiche.\",\n      \"responsible\": \"Max Mustermann\",\n     
+      \"due_date\": null\n    },\n    {\n      \"question\": \"Einsparpotenziale
+      im aktuellen Budget\",\n      \"context\": \"Diskussion in nächster
+      Sitzung.\",\n      \"responsible\": \"Finanzabteilung\",\n     
+      \"due_date\": null\n    },\n    {\n      \"question\": \"Optimierung der
+      Budgets für Online-Werbung\",\n      \"context\": \"Prüfung durch
+      Marketing.\",\n      \"responsible\": \"Bettina Blöchlinger\",\n     
+      \"due_date\": null\n    }\n  ]\n}"
 model: openai/gpt-4o
 responseFormat: json_schema
 modelParameters:
@@ -56,44 +111,92 @@ modelParameters:
   top_p: 0.01
 jsonSchema: |
   {
-    "type": "json_schema",
-    "json_schema": {
-      "name": "Plannly",
-      "strict": true,
-      "schema": {
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["general", "sections", "open_items"],
-        "properties": {
-          "general": {
+    "name": "InternalMeeting",
+    "strict": true,
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["general", "sections", "open_items"],
+      "properties": {
+        "general": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["date", "topic", "participants"],
+          "properties": {
+            "date": {
+              "anyOf": [
+                { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+                { "type": "null" }
+              ]
+            },
+            "topic": {
+              "anyOf": [
+                { "type": "string", "minLength": 1 },
+                { "type": "null" }
+              ]
+            },
+            "participants": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["name", "department"],
+                "properties": {
+                  "name": { "type": "string", "minLength": 1 },
+                  "department": {
+                    "anyOf": [
+                      { "type": "string", "minLength": 1 },
+                      { "type": "null" }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "sections": {
+          "type": "array",
+          "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["date", "topic", "participants"],
+            "required": ["title", "decisions"],
             "properties": {
-              "date": {
-                "anyOf": [
-                  { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
-                  { "type": "null" }
-                ]
-              },
-              "topic": {
-                "anyOf": [
-                  { "type": "string", "minLength": 1 },
-                  { "type": "null" }
-                ]
-              },
-              "participants": {
+              "title": { "type": "string", "minLength": 1 },
+              "decisions": {
                 "type": "array",
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
-                  "required": ["name"],
+                  "required": ["decision", "actions", "responsibilities", "due_date"],
                   "properties": {
-                    "name": { "type": "string", "minLength": 1 },
-                    "department": {
+                    "decision": { "type": "string", "minLength": 1 },
+                    "responsibilities": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": ["person", "department"],
+                        "properties": {
+                          "person": { "type": "string", "minLength": 1 },
+                          "department": {
+                            "anyOf": [
+                              { "type": "string", "minLength": 1 },
+                              { "type": "null" }
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    "actions": {
                       "anyOf": [
-                        { "type": "string", "minLength": 1 },
+                        { "type": "array", "items": { "type": "string", "minLength": 1 } },
+                        { "type": "null" }
+                      ]
+                    },
+                    "due_date": {
+                      "anyOf": [
+                        { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
                         { "type": "null" }
                       ]
                     }
@@ -101,77 +204,28 @@ jsonSchema: |
                 }
               }
             }
-          },
-          "sections": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["title", "decisions"],
-              "properties": {
-                "title": { "type": "string", "minLength": 1 },
-                "decisions": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "required": ["decision"],
-                    "properties": {
-                      "decision": { "type": "string", "minLength": 1 },
-                      "responsibilities": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "additionalProperties": false,
-                          "required": ["person"],
-                          "properties": {
-                            "person": { "type": "string", "minLength": 1 },
-                            "department": {
-                              "anyOf": [
-                                { "type": "string", "minLength": 1 },
-                                { "type": "null" }
-                              ]
-                            }
-                          }
-                        }
-                      },
-                      "actions": {
-                        "type": "array",
-                        "items": { "type": "string", "minLength": 1 }
-                      },
-                      "due_date": {
-                        "anyOf": [
-                          { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
-                          { "type": "null" }
-                        ]
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "open_items": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["question", "context"],
-              "properties": {
-                "question": { "type": "string", "minLength": 1 },
-                "context": { "type": "string", "minLength": 1 },
-                "responsible": {
-                  "anyOf": [
-                    { "type": "string", "minLength": 1 },
-                    { "type": "null" }
-                  ]
-                },
-                "due_date": {
-                  "anyOf": [
-                    { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
-                    { "type": "null" }
-                  ]
-                }
+          }
+        },
+        "open_items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["question", "context", "responsible", "due_date"],
+            "properties": {
+              "question": { "type": "string", "minLength": 1 },
+              "context": { "type": "string", "minLength": 1 },
+              "responsible": {
+                "anyOf": [
+                  { "type": "string", "minLength": 1 },
+                  { "type": "null" }
+                ]
+              },
+              "due_date": {
+                "anyOf": [
+                  { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+                  { "type": "null" }
+                ]
               }
             }
           }
