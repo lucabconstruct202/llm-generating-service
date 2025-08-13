@@ -112,7 +112,7 @@ modelParameters:
 jsonSchema: |
   {
     "name": "InternalMeeting",
-    "strict": true,
+    "strict": false,
     "schema": {
       "type": "object",
       "additionalProperties": false,
