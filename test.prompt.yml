@@ -1,0 +1,181 @@
+messages:
+  - role: system
+    content: >-
+      Sprache: Deutsch (Schweiz, de-CH). Alle Textfelder im JSON müssen auf
+      Deutsch sein.\nZiel: Erstelle ein detailliertes und exaktes
+      Protokoll\nZiel: Erstelle ein detailliertes und exaktes Protokoll für eine
+      interne Sitzung basierend auf dem bereitgestellten Textdokument. Das
+      Protokoll muss alle internen Entscheidungen, Zuordnungen und
+      administrativen Festlegungen dokumentieren, ohne Projektthemen oder
+      spezifische technische Aspekte zu
+      berücksichtigen.\n\nAnweisung:\nAllgemeine Besprechungsdaten:\n- Datum der
+      Sitzung (falls verfügbar)\n- Thema der Sitzung (falls explizit genannt, z.
+      B. „Marketingplanung“, „Finanzplanung“ oder „HR-Sitzung“)\n- Beteiligte
+      Personen und Abteilungen: Nenne alle anwesenden Personen sowie deren
+      Abteilungen (z. B. HR, Finanzabteilung, Marketing, Verwaltung,
+      etc.).\n\nProtokoll der internen Sitzung (mit Fokus auf administrative
+      Entscheidungen und organisatorische Themen):\n- Gliedere das Protokoll
+      nach den besprochenen Themen oder Abteilungen (z. B. Personalwesen,
+      Finanzen, Marketing, Büroorganisation, etc.).\n- Alle administrativen
+      Entscheidungen und organisatorischen Festlegungen müssen genau beschrieben
+      werden:\n  - Was wurde intern entschieden?\n  - Welche Aufgaben oder
+      Zuständigkeiten wurden zugewiesen?\n  - Wer ist für die Umsetzung
+      verantwortlich?\n  - Welche Schritte oder Maßnahmen wurden festgelegt?\n-
+      Offene Punkte und zu klärende Fragen: Wenn es offene Fragen gibt, die
+      weiter geklärt werden müssen, markiere diese als „zu klären“ und
+      beschreibe den Sachverhalt detailliert.\n\nOffene Punkte und zu klärende
+      Fragen (falls vorhanden):\n- Halte alle offenen Themen fest, bei denen
+      eine interne Entscheidung noch aussteht, aber bereits diskutiert wurde.
+      Diese müssen als „zu klären“ markiert werden.\n- Achte darauf, dass
+      interne Abstimmungen zwischen den Abteilungen gut dokumentiert sind, um
+      sicherzustellen, dass alle offenen Punkte klar erfasst
+      sind.\n\nWichtig:\n- Keine Interpretation oder Zusammenfassungen der
+      Diskussionen. Nur die internen Entscheidungen und Festlegungen werden
+      dokumentiert.\n- Keine Projektthemen oder technischen Entscheidungen
+      (diese gehören nicht in ein internes Sitzungsprotokoll).\n- Keine
+      Ergänzungen oder To-Dos ohne Bezug zu den getroffenen Entscheidungen oder
+      offenen Fragen.\n- Detaillierte und präzise Dokumentation: Jede
+      Entscheidung muss vollständig erfasst werden, damit sie später ohne
+      Rückfragen nachvollziehbar ist.\n\nFormat der Ausgabe:\n- Ein
+      strukturierter Bericht, der alle internen Entscheidungen, Zuständigkeiten
+      und offenen Fragen klar und übersichtlich darstellt.\n- Keine unnötigen
+      Erklärungen oder Zusammenfassungen, nur konkrete interne Entscheidungen
+      und organisatorische Festlegungen.\n\nWICHTIGER HINWEIS: Das beigefügte
+      Beispiel dient NUR als Formatvorgabe. Inhalte aus dem Beispiel dürfen
+      NICHT übernommen werden. Wenn Informationen im Transkript fehlen, setze
+      die entsprechenden Felder im JSON auf null. Die Ausgabe MUSS gültiges JSON
+      sein und dem output_schema exakt entsprechen.
+  - role: user
+    content: >-
+      Erstelle das Protokoll AUSSCHLIESSLICH auf Basis des folgenden
+      Transkripts.\n\nTRANSKRIPT:\n{{transcript}}\n
+model: openai/gpt-4o
+responseFormat: json_schema
+modelParameters:
+  temperature: 0
+  top_p: 0.01
+jsonSchema: |
+  {
+    "type": "json_schema",
+    "json_schema": {
+      "name": "Plannly",
+      "strict": true,
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["general", "sections", "open_items"],
+        "properties": {
+          "general": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["date", "topic", "participants"],
+            "properties": {
+              "date": {
+                "anyOf": [
+                  { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+                  { "type": "null" }
+                ]
+              },
+              "topic": {
+                "anyOf": [
+                  { "type": "string", "minLength": 1 },
+                  { "type": "null" }
+                ]
+              },
+              "participants": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["name"],
+                  "properties": {
+                    "name": { "type": "string", "minLength": 1 },
+                    "department": {
+                      "anyOf": [
+                        { "type": "string", "minLength": 1 },
+                        { "type": "null" }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "sections": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["title", "decisions"],
+              "properties": {
+                "title": { "type": "string", "minLength": 1 },
+                "decisions": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["decision"],
+                    "properties": {
+                      "decision": { "type": "string", "minLength": 1 },
+                      "responsibilities": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": ["person"],
+                          "properties": {
+                            "person": { "type": "string", "minLength": 1 },
+                            "department": {
+                              "anyOf": [
+                                { "type": "string", "minLength": 1 },
+                                { "type": "null" }
+                              ]
+                            }
+                          }
+                        }
+                      },
+                      "actions": {
+                        "type": "array",
+                        "items": { "type": "string", "minLength": 1 }
+                      },
+                      "due_date": {
+                        "anyOf": [
+                          { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+                          { "type": "null" }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "open_items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["question", "context"],
+              "properties": {
+                "question": { "type": "string", "minLength": 1 },
+                "context": { "type": "string", "minLength": 1 },
+                "responsible": {
+                  "anyOf": [
+                    { "type": "string", "minLength": 1 },
+                    { "type": "null" }
+                  ]
+                },
+                "due_date": {
+                  "anyOf": [
+                    { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+                    { "type": "null" }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
